@@ -6,8 +6,8 @@ void *FSMTask(void *threadID){
 	StateMachine localFSM;	//Save state machine data locally
 	mavros_msgs::State localPX4state;
 
-	ros::NodeHandle n;  
-	
+	ros::NodeHandle n;
+
 	//Create service clients
 	ros::ServiceClient armClient = n.serviceClient<mavros_msgs::CommandBool>
             ("mavros/cmd/arming");
@@ -46,6 +46,19 @@ void *FSMTask(void *threadID){
 		    pthread_mutex_unlock(&mutexes.FSM);
 		    // e_ROS_PosModeSet = 1;   %Flag that tells the RefPubThread that this mode was just enabled
 		}
+
+//**********added code****************
+/*if(1){//WaitForEvent(joyEvents.buttonB,0) == 0){
+		pthread_mutex_lock(&mutexes.FSM);
+			if(FSM.State != FSM.MODE_POSITION_ROS){
+				ROS_INFO("ROS Position Mode!");
+			}
+			FSM.State = FSM.MODE_POSITION_ROS;
+		pthread_mutex_unlock(&mutexes.FSM);
+		// e_ROS_PosModeSet = 1;   %Flag that tells the RefPubThread that this mode was just enabled
+}*/
+//*************************************
+
 		if(WaitForEvent(joyEvents.buttonX,0) == 0){
 			ROS_INFO("Joystick Position Mode!");
 		    pthread_mutex_lock(&mutexes.FSM);
@@ -71,7 +84,7 @@ void *FSMTask(void *threadID){
 			    		ROS_INFO("Joystick reference is in body frame!");
 			    	}
 			    }
-		    	FSM.PosControlMode = FSM.POS_CONTROL_LOCAL;		    	
+		    	FSM.PosControlMode = FSM.POS_CONTROL_LOCAL;
 		    pthread_mutex_unlock(&mutexes.FSM);
 		}
 		if(WaitForEvent(joyEvents.buttonRight,0) == 0){
@@ -106,15 +119,15 @@ void *FSMTask(void *threadID){
 	    pthread_mutex_unlock(&mutexes.PX4state);
 
 	    //Request to arm depending on desired state
-	    //Chunk of code extracted from 
+	    //Chunk of code extracted from
 	    if((localFSM.State == localFSM.MODE_POSITION_JOY) ||
 	       (localFSM.State == localFSM.MODE_POSITION_ROS) ||
 	       (localFSM.State == localFSM.MODE_ATTITUDE)){
 
 	        if( localPX4state.mode != "OFFBOARD" &&
 	            (ros::Time::now() - last_request > ros::Duration(1.0))){
-	            if( SetModeClient.call(ModeMsg) &&
-	                ModeMsg.response.success){
+	            if( SetModeClient.call(ModeMsg)){ //&&
+	                //ModeMsg.response.success){
 	                ROS_INFO("Offboard enabled!");
 	            }
 	            last_request = ros::Time::now();
@@ -139,7 +152,7 @@ void *FSMTask(void *threadID){
 	}
 
 	ROS_INFO("Exiting State Machine Thread...");
-	
+
 	pthread_mutex_lock(&mutexes.threadCount);
         threadCount -= 1;
     pthread_mutex_unlock(&mutexes.threadCount);

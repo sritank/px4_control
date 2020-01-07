@@ -50,8 +50,8 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_executable(px4_control_node 
-	           src/px4_control.cpp 
+add_executable(px4_control_node
+	           src/px4_control.cpp
 	           src/HelperFunctions/helper.cpp
 	           src/HelperFunctions/QuatRotEuler.cpp
              src/Callbacks/callbacks.cpp
@@ -68,4 +68,6 @@ target_link_libraries(px4_control_node ${catkin_LIBRARIES})
 #This makes sure that messages and services are compiled before the rest
 add_dependencies(px4_control_node px4_control_generate_messages_cpp)
 add_dependencies(px4_control_node ${catkin_EXPORTED_TARGETS})
-
+add_executable(talker src/talker.cpp)
+target_link_libraries(talker ${catkin_LIBRARIES})
+add_dependencies(talker beginner_tutorials_generate_messages_cpp)
